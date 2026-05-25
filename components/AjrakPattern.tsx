@@ -31,7 +31,7 @@ function Diamond({ size, color, style }: { size: number; color: string; style?: 
 
 export function AjrakPattern({ variant = 'light', style }: AjrakPatternProps) {
   const tint = variant === 'warm' ? SagaColors.patternTintWarm : SagaColors.patternTint;
-  const accent = variant === 'warm' ? SagaColors.crimson : SagaColors.indigo;
+  const accent = variant === 'warm' ? SagaColors.brickRed : SagaColors.deepIndigo;
 
   return (
     <View style={[styles.container, style]} pointerEvents="none">

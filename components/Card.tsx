@@ -1,6 +1,5 @@
 /**
- * Card.tsx
- * Elevated surface with soft shadow and Ajrak-accent border option.
+ * Card.tsx — Simple card; use CulturalCard for rich interactive blocks.
  */
 
 import type { ReactNode } from 'react';
@@ -44,11 +43,10 @@ const styles = StyleSheet.create({
   },
   accent: {
     borderLeftWidth: 4,
-    borderLeftColor: SagaColors.crimson,
+    borderLeftColor: SagaColors.brickRed,
   },
   pressed: {
     opacity: 0.94,
     transform: [{ scale: 0.99 }],
-    ...Shadows.cardHover,
   },
 });

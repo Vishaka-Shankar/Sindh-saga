@@ -17,7 +17,7 @@ export const Shadows = {
   }),
   cardHover: Platform.select<ViewStyle>({
     ios: {
-      shadowColor: '#9B1B30',
+      shadowColor: '#C0392B',
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.12,
       shadowRadius: 16,

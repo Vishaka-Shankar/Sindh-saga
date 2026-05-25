@@ -1,14 +1,18 @@
 /**
- * ProfileScreen.tsx
- * Demo profile with heritage stats and project info.
+ * ProfileScreen.tsx — Profile with heritage stats.
  */
 
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import {
+  CulturalHeader,
+  DecorativeDivider,
+  PatternContainer,
+  RuliStrip,
+  SindhiBadge,
+} from '@/components/culture';
 import { Card } from '@/components/Card';
-import { Header } from '@/components/Header';
-import { ScreenBackground } from '@/components/ScreenBackground';
 import { Gradients, SagaColors } from '@/constants/colors';
 import { Spacing } from '@/constants/spacing';
 import { Typography } from '@/constants/typography';
@@ -16,10 +20,11 @@ import { MOCK_USER } from '@/data/mockStories';
 
 export default function ProfileScreen() {
   return (
-    <ScreenBackground>
-      <Header title="Profile" subtitle="Your SindhSaga journey" dark compact />
+    <PatternContainer>
+      <CulturalHeader title="Profile" subtitle="Your Sindh Saga journey" variant="dark" compact />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={[...Gradients.heroSoft]} style={styles.profileBanner}>
+        <LinearGradient colors={[...Gradients.hero]} style={styles.profileBanner}>
+          <RuliStrip height={4} style={styles.ruliTop} />
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{MOCK_USER.name.charAt(0)}</Text>
           </View>
@@ -39,16 +44,18 @@ export default function ProfileScreen() {
           </Card>
         </View>
 
+        <DecorativeDivider label="About" />
+
         <Card accent>
-          <Text style={styles.aboutTitle}>About SindhSaga</Text>
+          <SindhiBadge label="Demo build" variant="gold" style={styles.aboutBadge} />
+          <Text style={styles.aboutTitle}>About Sindh Saga</Text>
           <Text style={styles.aboutBody}>
             A React Native Expo app celebrating Sindhi heritage through voice storytelling. This
-            demo showcases UI and navigation; Firebase, Whisper, and GPT integration follow in the
-            next development phase.
+            version showcases the cultural UI system; Firebase, Whisper, and GPT follow next.
           </Text>
         </Card>
       </ScrollView>
-    </ScreenBackground>
+    </PatternContainer>
   );
 }
 
@@ -62,12 +69,15 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     alignItems: 'center',
     marginBottom: Spacing.md,
+    borderWidth: 2,
+    borderColor: SagaColors.gold,
   },
+  ruliTop: { width: '100%', marginBottom: Spacing.md },
   avatar: {
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: SagaColors.white,
+    backgroundColor: SagaColors.ivory,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
@@ -77,11 +87,11 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 36,
     fontWeight: '800',
-    color: SagaColors.crimson,
+    color: SagaColors.brickRed,
   },
   name: {
     ...Typography.h2,
-    color: SagaColors.textOnDark,
+    color: SagaColors.ivory,
   },
   email: {
     ...Typography.caption,
@@ -90,7 +100,7 @@ const styles = StyleSheet.create({
   },
   decorative: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.65)',
+    color: 'rgba(250, 243, 224, 0.65)',
     marginTop: Spacing.md,
     fontStyle: 'italic',
   },
@@ -100,17 +110,16 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 32,
     fontWeight: '800',
-    color: SagaColors.crimson,
+    color: SagaColors.brickRed,
   },
-  statValueAlt: {
-    color: SagaColors.indigo,
-  },
+  statValueAlt: { color: SagaColors.deepIndigo },
   statLabel: {
     ...Typography.caption,
     color: SagaColors.textMuted,
     marginTop: 4,
     textAlign: 'center',
   },
+  aboutBadge: { marginBottom: Spacing.sm },
   aboutTitle: {
     ...Typography.h3,
     color: SagaColors.text,

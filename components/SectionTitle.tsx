@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   dash: {
     width: 4,
     height: 22,
-    backgroundColor: SagaColors.crimson,
+    backgroundColor: SagaColors.brickRed,
     borderRadius: 2,
     marginRight: 10,
   },

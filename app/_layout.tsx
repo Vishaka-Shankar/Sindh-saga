@@ -1,14 +1,14 @@
-/**
- * app/_layout.tsx
- * Root layout: Expo Router stack (tabs + story detail). No backend providers.
- */
-
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import React, { useState } from 'react';
+import { View } from 'react-native';
 import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { MobileDrawer, Navbar, TopProgressBar } from '@/components/culture';
 import { SagaColors } from '@/constants/colors';
+import { AppProviders } from '@/context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export const unstable_settings = {
@@ -26,14 +26,36 @@ const LightTheme = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : LightTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="story/[id]" options={{ headerShown: false, title: 'Story' }} />
-      </Stack>
-      <StatusBar style="dark" />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <AppProviders>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : LightTheme}>
+          <View style={{ flex: 1 }}>
+            <TopProgressBar />
+            <Navbar onOpenDrawer={() => setIsDrawerOpen(true)} />
+            <MobileDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+
+            <View style={{ flex: 1 }}>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  animationDuration: 300,
+                }}
+              >
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="story/[id]" options={{ headerShown: false, title: 'Story' }} />
+                <Stack.Screen name="about" options={{ headerShown: false, title: 'About' }} />
+                <Stack.Screen name="contact" options={{ headerShown: false, title: 'Contact' }} />
+              </Stack>
+            </View>
+
+            <StatusBar style="dark" />
+          </View>
+        </ThemeProvider>
+      </AppProviders>
+    </SafeAreaProvider>
   );
 }

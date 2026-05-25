@@ -1,13 +1,9 @@
 /**
- * components/index.ts
- * Reusable UI exports for SindhSaga screens.
+ * components/index.ts — UI exports (legacy + Sindh Saga design system).
  */
 
-export { AjrakPattern } from './AjrakPattern';
+export * from './culture';
 export { Button } from './Button';
 export { Card } from './Card';
 export { Header } from './Header';
-export { HeroBanner } from './HeroBanner';
-export { HeritageCard } from './HeritageCard';
 export { ScreenBackground } from './ScreenBackground';
-export { SectionTitle } from './SectionTitle';

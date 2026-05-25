@@ -1,6 +1,6 @@
 /**
- * HeritageCard.tsx
- * Rich interactive section card for culture / heritage / poetry blocks.
+ * HeritageRowCard.tsx — Horizontal heritage row (icon + text), hover on web.
+ * Location: components/culture/
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
@@ -11,8 +11,9 @@ import { SagaColors } from '@/constants/colors';
 import { Shadows } from '@/constants/shadows';
 import { Spacing } from '@/constants/spacing';
 import { Typography } from '@/constants/typography';
+import { isPressableHovered, useHoverable } from '@/hooks/useHoverable';
 
-type HeritageCardProps = {
+type HeritageRowCardProps = {
   title: string;
   description: string;
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -21,23 +22,28 @@ type HeritageCardProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export function HeritageCard({
+export function HeritageRowCard({
   title,
   description,
   icon,
   accentColor = SagaColors.brickRed,
   onPress,
   style,
-}: HeritageCardProps) {
+}: HeritageRowCardProps) {
+  const { hoverEnabled } = useHoverable();
+
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.wrap, pressed && styles.pressed, style]}
-      accessibilityRole="button">
-      <LinearGradient
-        colors={[SagaColors.surface, SagaColors.ivoryDark]}
-        style={styles.card}>
-        <View style={[styles.iconWrap, { backgroundColor: `${accentColor}18` }]}>
+      accessibilityRole="button"
+      style={(state) => [
+        styles.wrap,
+        isPressableHovered(state, hoverEnabled) && styles.hover,
+        state.pressed && styles.pressed,
+        style,
+      ]}>
+      <LinearGradient colors={[SagaColors.surface, SagaColors.ivoryWarm]} style={styles.card}>
+        <View style={[styles.iconWrap, { backgroundColor: `${accentColor}20` }]}>
           <MaterialIcons name={icon} size={28} color={accentColor} />
         </View>
         <View style={styles.textBlock}>
@@ -46,7 +52,7 @@ export function HeritageCard({
             {description}
           </Text>
         </View>
-        <MaterialIcons name="chevron-right" size={24} color={SagaColors.textMuted} />
+        <MaterialIcons name="chevron-right" size={24} color={SagaColors.deepIndigo} />
         <View style={[styles.accentBar, { backgroundColor: accentColor }]} />
       </LinearGradient>
     </Pressable>
@@ -57,11 +63,16 @@ const styles = StyleSheet.create({
   wrap: {
     borderRadius: Spacing.cardRadius,
     ...Shadows.card,
+    marginBottom: Spacing.md,
   },
-  pressed: {
-    opacity: 0.94,
-    transform: [{ scale: 0.985 }],
+  hover: {
+    ...Shadows.cardHover,
+    transform: [{ translateY: -3 }],
+    borderWidth: 2,
+    borderColor: SagaColors.brickRed,
+    borderRadius: Spacing.cardRadius,
   },
+  pressed: { opacity: 0.94 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -79,10 +90,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: Spacing.md,
   },
-  textBlock: {
-    flex: 1,
-    paddingRight: Spacing.sm,
-  },
+  textBlock: { flex: 1, paddingRight: Spacing.sm },
   title: {
     ...Typography.h3,
     color: SagaColors.text,

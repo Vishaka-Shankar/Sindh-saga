@@ -1,60 +1,68 @@
 /**
- * StoryScreen.tsx
- * Mock story library with rich cultural card styling.
+ * StoryScreen.tsx — Story library with cultural cards.
  */
 
-import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { FlatList, StyleSheet } from 'react-native';
 
-import { Card } from '@/components/Card';
-import { Header } from '@/components/Header';
-import { ScreenBackground } from '@/components/ScreenBackground';
-import { SagaColors } from '@/constants/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import {
+  CulturalCard,
+  CulturalHeader,
+  PatternContainer,
+  SindhiBadge,
+} from '@/components/culture';
 import { Spacing } from '@/constants/spacing';
-import { Typography } from '@/constants/typography';
+import { useScroll } from '@/context';
 import { MOCK_STORIES, type MockStory } from '@/data/mockStories';
 import { ROUTES } from '@/navigation/routes';
 
 export default function StoryScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { setScrollY } = useScroll();
 
   const renderItem = ({ item, index }: { item: MockStory; index: number }) => (
-    <Card
-      accent
+    <CulturalCard
+      title={item.title}
+      description={item.excerpt}
+      badge={`Story ${index + 1}`}
+      imageTint={index % 2 === 0 ? 'indigo' : 'brick'}
+      onPress={() => router.push(ROUTES.storyDetail(item.id))}
       style={styles.card}
-      onPress={() => router.push(ROUTES.storyDetail(item.id))}>
-      <View style={styles.cardHeader}>
-        <View style={[styles.indexBadge, { backgroundColor: index % 2 === 0 ? SagaColors.crimson : SagaColors.indigo }]}>
-          <Text style={styles.indexText}>{index + 1}</Text>
-        </View>
-        <Text style={styles.meta}>
-          {item.recordedAt} · {item.duration}
-        </Text>
-      </View>
-      <Text style={styles.title}>{item.title}</Text>
-      <Text style={styles.excerpt} numberOfLines={2}>
-        {item.excerpt}
-      </Text>
-      <Text style={styles.readMore}>Read story →</Text>
-    </Card>
+    />
   );
 
   return (
-    <ScreenBackground>
-      <Header title="Stories" subtitle="Sindhi folklore · AI-enhanced for children" dark compact />
+    <PatternContainer>
       <FlatList
         data={MOCK_STORIES}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingTop: insets.top + 80 }]}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={(event) => {
+          setScrollY(event.nativeEvent.contentOffset.y);
+        }}
         ListHeaderComponent={
-          <Text style={styles.listIntro}>
-            {MOCK_STORIES.length} stories in your heritage collection
-          </Text>
+          <>
+            <CulturalHeader
+              title="Stories"
+              subtitle="Sindhi folklore · AI-enhanced for children"
+              variant="dark"
+              compact
+            />
+            <SindhiBadge
+              label={`${MOCK_STORIES.length} tales in your collection`}
+              variant="cream"
+              style={styles.badge}
+            />
+          </>
         }
       />
-    </ScreenBackground>
+    </PatternContainer>
   );
 }
 
@@ -63,49 +71,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.screenPadding,
     paddingBottom: Spacing.xl,
   },
-  listIntro: {
-    ...Typography.caption,
-    color: SagaColors.textMuted,
+  badge: {
     marginBottom: Spacing.md,
     marginTop: Spacing.sm,
+    alignSelf: 'flex-start',
   },
   card: { marginBottom: Spacing.md },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.sm,
-  },
-  indexBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  indexText: {
-    color: SagaColors.white,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  meta: {
-    ...Typography.caption,
-    color: SagaColors.textMuted,
-  },
-  title: {
-    ...Typography.h3,
-    color: SagaColors.text,
-    marginBottom: 6,
-  },
-  excerpt: {
-    ...Typography.body,
-    color: SagaColors.textMuted,
-    fontSize: 14,
-  },
-  readMore: {
-    ...Typography.caption,
-    color: SagaColors.crimson,
-    fontWeight: '700',
-    marginTop: Spacing.md,
-  },
 });

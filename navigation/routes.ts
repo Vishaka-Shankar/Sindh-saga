@@ -10,5 +10,8 @@ export const ROUTES = {
   record: '/record' as Href,
   stories: '/story' as Href,
   profile: '/profile' as Href,
+  about: '/about' as Href,
+  contact: '/contact' as Href,
   storyDetail: (id: string) => `/story/${id}` as Href,
 } as const;
+
