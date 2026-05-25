@@ -7,14 +7,15 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  AjrakButton,
-  CulturalCard,
-  CulturalFooter,
-  CulturalHero,
-  HeritageRowCard,
-  HeritageSection,
-  PatternContainer,
+    AjrakButton,
+    CulturalCard,
+    CulturalFooter,
+    CulturalHero,
+    HeritageRowCard,
+    HeritageSection,
+    PatternContainer
 } from '@/components/culture';
+import { CulturalGallery } from '@/components/culture/CulturalGallery';
 import { SagaColors } from '@/constants/colors';
 import { Spacing } from '@/constants/spacing';
 import { useScroll } from '@/context';
@@ -81,6 +82,8 @@ export default function HomeScreen() {
           style={styles.actionGap}
         />
       </View>
+
+      <CulturalGallery />
 
       <HeritageSection title="Discover heritage" subtitle="Tap a section to begin">
         {HERITAGE_SECTIONS.map((section) => (
