@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { View } from 'react-native';
@@ -27,15 +27,22 @@ const LightTheme = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const segments = useSegments();
+
+  // Hide navbar on login and create-account screens
+  const currentScreen = segments[0];
+  const isAuthScreen = currentScreen === 'login' || currentScreen === 'create-account';
 
   return (
     <SafeAreaProvider>
       <AppProviders>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : LightTheme}>
           <View style={{ flex: 1 }}>
-            <TopProgressBar />
-            <Navbar onOpenDrawer={() => setIsDrawerOpen(true)} />
-            <MobileDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+            {!isAuthScreen && <TopProgressBar />}
+            {!isAuthScreen && <Navbar onOpenDrawer={() => setIsDrawerOpen(true)} />}
+            {!isAuthScreen && (
+              <MobileDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+            )}
 
             <View style={{ flex: 1 }}>
               <Stack
@@ -45,6 +52,8 @@ export default function RootLayout() {
                   animationDuration: 300,
                 }}
               >
+                <Stack.Screen name="login" options={{ headerShown: false }} />
+                <Stack.Screen name="create-account" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="story/[id]" options={{ headerShown: false, title: 'Story' }} />
                 <Stack.Screen name="about" options={{ headerShown: false, title: 'About' }} />
