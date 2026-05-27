@@ -6,16 +6,16 @@ import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import CulturalGallery from '@/components/CulturalGallery';
 import {
-    AjrakButton,
-    CulturalCard,
-    CulturalFooter,
-    CulturalHero,
-    HeritageRowCard,
-    HeritageSection,
-    PatternContainer
+  AjrakButton,
+  CulturalCard,
+  CulturalFooter,
+  CulturalHero,
+  HeritageRowCard,
+  HeritageSection,
+  PatternContainer,
 } from '@/components/culture';
-import { CulturalGallery } from '@/components/culture/CulturalGallery';
 import { SagaColors } from '@/constants/colors';
 import { Spacing } from '@/constants/spacing';
 import { useScroll } from '@/context';
@@ -72,61 +72,61 @@ export default function HomeScreen() {
           taglineSindhi="◆ سنڌ جي ڪهاڻيون · Sindhi Heritage ◆"
         />
 
-      <View style={styles.actions}>
-        <AjrakButton label="Record a story" fullWidth onPress={() => router.push(ROUTES.record)} />
-        <AjrakButton
-          label="Explore stories"
-          variant="outline"
-          fullWidth
-          onPress={() => router.push(ROUTES.stories)}
-          style={styles.actionGap}
-        />
-      </View>
-
-      <CulturalGallery />
-
-      <HeritageSection title="Discover heritage" subtitle="Tap a section to begin">
-        {HERITAGE_SECTIONS.map((section) => (
-          <HeritageRowCard
-            key={section.title}
-            title={section.title}
-            description={section.description}
-            icon={section.icon}
-            accentColor={section.color}
-            onPress={() => router.push(section.route)}
+        <View style={styles.actions}>
+          <AjrakButton label="Record a story" fullWidth onPress={() => router.push(ROUTES.record)} />
+          <AjrakButton
+            label="Explore stories"
+            variant="outline"
+            fullWidth
+            onPress={() => router.push(ROUTES.stories)}
+            style={styles.actionGap}
           />
-        ))}
-      </HeritageSection>
+        </View>
 
-      <HeritageSection title="Sindhi Culture Stories" subtitle="Curated from mock collection">
-        <View style={styles.cardGrid}>
+        <CulturalGallery category="All" />
+
+        <HeritageSection title="Discover heritage" subtitle="Tap a section to begin">
           {HERITAGE_SECTIONS.map((section) => (
-            <CulturalCard
-              key={`card-${section.title}`}
+            <HeritageRowCard
+              key={section.title}
               title={section.title}
               description={section.description}
-              badge="Heritage"
-              imageTint={section.tint}
+              icon={section.icon}
+              accentColor={section.color}
               onPress={() => router.push(section.route)}
-              style={styles.gridCard}
             />
           ))}
-        </View>
-      </HeritageSection>
+        </HeritageSection>
 
-      <HeritageSection title="Featured story" subtitle="From the Sindh Saga collection">
-        <CulturalCard
-          title={featured.title}
-          description={featured.excerpt}
-          badge="✦ Featured"
-          imageTint="indigo"
-          onPress={() => router.push(ROUTES.storyDetail(featured.id))}
-        />
-      </HeritageSection>
+        <HeritageSection title="Sindhi Culture Stories" subtitle="Curated from mock collection">
+          <View style={styles.cardGrid}>
+            {HERITAGE_SECTIONS.map((section) => (
+              <CulturalCard
+                key={`card-${section.title}`}
+                title={section.title}
+                description={section.description}
+                badge="Heritage"
+                imageTint={section.tint}
+                onPress={() => router.push(section.route)}
+                style={styles.gridCard}
+              />
+            ))}
+          </View>
+        </HeritageSection>
 
-      <CulturalFooter />
-    </ScrollView>
-  </PatternContainer>
+        <HeritageSection title="Featured story" subtitle="From the Sindh Saga collection">
+          <CulturalCard
+            title={featured.title}
+            description={featured.excerpt}
+            badge="✦ Featured"
+            imageTint="indigo"
+            onPress={() => router.push(ROUTES.storyDetail(featured.id))}
+          />
+        </HeritageSection>
+
+        <CulturalFooter />
+      </ScrollView>
+    </PatternContainer>
   );
 }
 
