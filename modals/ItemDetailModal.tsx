@@ -65,7 +65,14 @@ export function ItemDetailModal({
               </View>
             ) : itemDetails ? (
               <>
-                <Image source={itemDetails.imageUrl} style={styles.featureImage} contentFit="cover" />
+                <Image
+                  source={{
+                    uri: itemDetails.imageUrl,
+                    headers: { 'User-Agent': 'SindhSagaApp/1.0 (https://sindhsaga.org; contact@sindhsaga.org)' }
+                  }}
+                  style={styles.featureImage}
+                  contentFit="cover"
+                />
                 <Text style={styles.title}>{itemDetails.name}</Text>
                 <Text style={styles.sindhiTitle}>سنڌي نالو: {itemDetails.name}</Text>
                 <Text style={styles.badge}>{itemDetails.category}</Text>

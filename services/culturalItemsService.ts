@@ -3,13 +3,17 @@
 // Falls back to local data when the network is unavailable or Firebase is
 // not yet configured — this prevents the "Network Error" blank screen.
 
-import { collection, getDocs, query, where, orderBy, getFirestore } from 'firebase/firestore';
-import { getFirebaseApp } from '../firebase/app';
+import { orderBy, where } from 'firebase/firestore';
 import {
-  CulturalItem,
-  Category,
-  FALLBACK_CULTURAL_ITEMS,
+    Category,
+    CulturalItem,
+    FALLBACK_CULTURAL_ITEMS,
+    getCulturalItemById,
 } from '../data/culturalItems';
+import {
+    fetchCollectionDocuments,
+    fetchDocumentById
+} from './firebaseService';
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 
@@ -36,45 +40,112 @@ function isNetworkError(err: unknown): boolean {
  */
 export async function fetchCulturalItems(
   category: Category = 'All'
-): Promise<{ items: CulturalItem[]; fromCache: boolean }> {
+): Promise<{ items: CulturalItem[]; fromCache: boolean; error?: string }> {
   try {
-    // Lazy-init Firebase — returns null if .env vars are missing
-    const app = getFirebaseApp();
-    if (!app) {
-      console.warn('[culturalItemsService] Firebase not configured, using local data.');
-      return { items: filterLocal(category), fromCache: true };
-    }
-
-    const db = getFirestore(app);
-    const ref = collection(db, 'culturalItems');
-
-    const q =
+    const constraints =
       category === 'All'
-        ? query(ref, orderBy('name'))
-        : query(ref, where('category', '==', category), orderBy('name'));
+        ? [orderBy('title')]
+        : [where('category', '==', category), orderBy('title')];
 
-    const snapshot = await getDocs(q);
+    const documents = await fetchCollectionDocuments<Record<string, unknown>>(
+      'culturalItems',
+      constraints
+    );
 
-    // If Firestore returned an empty collection, still fall back to local data
-    // so the gallery is never blank on first run / before seeding.
-    if (snapshot.empty) {
+    if (documents.length === 0) {
       const filtered = filterLocal(category);
-      return { items: filtered, fromCache: true };
+      return {
+        items: filtered,
+        fromCache: true,
+        error: 'No live cultural cards were found. Showing local preview instead.',
+      };
     }
 
-    const items: CulturalItem[] = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...(doc.data() as Omit<CulturalItem, 'id'>),
-    }));
-
+    const items = documents.map(mapFirestoreToCulturalItem);
     return { items, fromCache: false };
   } catch (err) {
     console.warn('[culturalItemsService] Fetch failed, using local data:', err);
 
-    // Always surface local fallback — never let the gallery be empty.
     const filtered = filterLocal(category);
-    return { items: filtered, fromCache: true };
+    return {
+      items: filtered,
+      fromCache: true,
+      error: 'Unable to load live cultural cards. Showing local preview.',
+    };
   }
+}
+
+export async function fetchCulturalItemById(
+  id: string
+): Promise<{ item: CulturalItem | null; fromCache: boolean; error?: string }> {
+  try {
+    const document = await fetchDocumentById<Record<string, unknown>>('culturalItems', id);
+
+    if (!document) {
+      const fallback = getCulturalItemById(id);
+      return {
+        item: fallback ?? null,
+        fromCache: true,
+        error: fallback
+          ? 'Item was unavailable from Firestore. Showing local preview.'
+          : 'This cultural item could not be found.',
+      };
+    }
+
+    return {
+      item: mapFirestoreToCulturalItem(document),
+      fromCache: false,
+    };
+  } catch (err) {
+    console.warn('[culturalItemsService] Item fetch failed:', err);
+
+    const fallback = getCulturalItemById(id);
+    return {
+      item: fallback ?? null,
+      fromCache: true,
+      error: fallback
+        ? 'Unable to load live item. Showing local preview.'
+        : 'Unable to load this cultural item.',
+    };
+  }
+}
+
+function mapFirestoreToCulturalItem(
+  document: Record<string, unknown> & { id: string }
+): CulturalItem {
+  const title = document.title ?? document.name ?? 'Sindhi Cultural Item';
+  const category = normalizeCategory(document.category);
+
+  return {
+    id: document.id,
+    name: String(title),
+    nameSindhi: String(document.nameSindhi ?? title),
+    category,
+    description: String(document.description ?? ''),
+    origin: String(document.origin ?? 'Sindh'),
+    imageUrl: String(document.imageUrl ?? ''),
+    imageSource: undefined,
+    galleryImages: [],
+    accentColor: String(document.accentColor ?? '#C0392B'),
+    tags: Array.isArray(document.tags)
+      ? document.tags.map((tag) => String(tag))
+      : [],
+  };
+}
+
+const VALID_ITEM_CATEGORIES: Array<Exclude<Category, 'All'>> = [
+  'Clothing',
+  'Food',
+  'History',
+  'Music',
+  'Art',
+];
+
+function normalizeCategory(value: unknown): Exclude<Category, 'All'> {
+  if (typeof value === 'string' && VALID_ITEM_CATEGORIES.includes(value as any)) {
+    return value as Exclude<Category, 'All'>;
+  }
+  return 'Art';
 }
 
 function filterLocal(category: Category): CulturalItem[] {

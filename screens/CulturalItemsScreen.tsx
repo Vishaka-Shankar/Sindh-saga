@@ -8,18 +8,18 @@
 
 import React, { useCallback, useState } from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import CulturalGallery from '../components/CulturalGallery';
 import { Category } from '../data/culturalItems';
 
-const CATEGORIES: Category[] = ['All', 'Clothing', 'Crafts', 'Food', 'Music'];
+const CATEGORIES: Category[] = ['All', 'History', 'Music', 'Clothing', 'Art', 'Food'];
 
 export default function CulturalItemsScreen() {
   const [activeCategory, setActiveCategory] = useState<Category>('All');

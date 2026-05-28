@@ -1,38 +1,55 @@
 // components/CulturalGallery.tsx
 // Fixed: no hooks inside .map() — all animations moved to dedicated components.
 
+import { ROUTES } from '@/navigation/routes';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  Dimensions,
-  FlatList,
-  Image,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Animated,
+    Dimensions,
+    FlatList,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View
 } from 'react-native';
-import AnimatedCulturalCard from './AnimatedCulturalCard';
-import { Category, CulturalItem, FALLBACK_CULTURAL_ITEMS } from '../data/culturalItems';
+import { Category, CulturalItem } from '../data/culturalItems';
 import { fetchCulturalItems } from '../services/culturalItemsService';
+import AnimatedCulturalCard from './AnimatedCulturalCard';
 
 const { width: SCREEN_W } = Dimensions.get('window');
-const CATEGORIES: Category[] = ['All', 'Clothing', 'Crafts', 'Food', 'Music'];
+const CATEGORIES: Category[] = ['All', 'History', 'Music', 'Clothing', 'Art', 'Food'];
 
-const WM = (f: string) =>
-  `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(f)}`;
-
+// ── Hero carousel: local bundled images (no network needed) ──────────────
 const HERO_SLIDES = [
-  { uri: WM('Ajrak Chadar.jpg'),                                label: 'اجرڪ — Ajrak',               sub: 'The sacred cloth of Sindh' },
-  { uri: WM('Mohenjo-daro Stupa and Granary.jpeg'),             label: 'موهن جو دڙو — Mohenjo-daro',  sub: "World's oldest city, 2500 BCE" },
-  { uri: WM('Folk Singing in Thar Sindh Pakistan.jpg'),         label: 'ٿر جي موسيقي — Thar Music',   sub: 'Desert songs of Sindh' },
-  { uri: WM('Bijal playing Surando.jpg'),                       label: 'سرندو — Surando',              sub: 'Folk music heritage' },
-  { uri: WM('A Sindhi kid with cultural dress at village.jpg'), label: 'سنڌي ورثو — Heritage',         sub: 'Passed through generations' },
-  { uri: WM('Group of Sindhi girls in traditional clothes.jpg'),label: 'روايتي لباس — Dress',          sub: 'Traditional Sindhi clothing' },
-  { uri: WM('Cultural Celebration in School.jpg'),              label: 'ثقافتي ڏينهن — Cultural Day',  sub: 'Sindhi Cultural Day' },
+  {
+    source: require('../assets/images/ajrak.jpg'),
+    label: 'اجرڪ — Ajrak',
+    sub: 'The sacred cloth of Sindh',
+  },
+  {
+    source: require('../assets/images/sindhi-topi.jpg'),
+    label: 'سنڌي ٽوپي — Sindhi Topi',
+    sub: 'The cap of cultural pride',
+  },
+  {
+    source: require('../assets/images/mohenjo-daro.jpg'),
+    label: 'موهن جو دڙو — Mohenjo-daro',
+    sub: "World's oldest city, 2500 BCE",
+  },
+  {
+    source: require('../assets/images/sindhi-dress.jpg'),
+    label: 'سنڌي لباس — Sindhi Dress',
+    sub: 'Traditional attire and mirror work',
+  },
+  {
+    source: require('../assets/images/cultural-celebration.jpg'),
+    label: 'ثقافتي تقريب — Celebration',
+    sub: 'Sindhi Cultural Day festivities',
+  },
 ];
 
 // ── Ajrak stripe divider ──────────────────────────────────────────────────
@@ -140,6 +157,32 @@ function BounceDot({ color, delay }: { color: string; delay: number }) {
   );
 }
 
+// ── Hero Slide — remote first, local fallback if the network image fails ──
+function HeroSlide({ item }: { item: { source: any; label: string; sub: string } }) {
+  const imageOpacity = useRef(new Animated.Value(0)).current;
+  const onImageLoad = () => {
+    Animated.timing(imageOpacity, { toValue: 1, duration: 350, useNativeDriver: true }).start();
+  };
+
+  return (
+    <View style={{ width: SCREEN_W, height: 280, overflow: 'hidden' }}>
+      <Animated.Image
+        source={item.source}
+        style={[{ width: '100%', height: '100%', opacity: imageOpacity }]}
+        resizeMode="cover"
+        onLoad={onImageLoad}
+      />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(10,10,20,0.45)' }]} />
+      <View style={{ position: 'absolute', bottom: 40, left: 20, right: 20 }}>
+        <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '500', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>
+          {item.sub}
+        </Text>
+        <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800' }}>{item.label}</Text>
+      </View>
+    </View>
+  );
+}
+
 // ── Hero Carousel ─────────────────────────────────────────────────────────
 function HeroCarousel() {
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -164,18 +207,7 @@ function HeroCarousel() {
         scrollEventThrottle={16}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: false })}
         getItemLayout={(_, index) => ({ length: SCREEN_W, offset: SCREEN_W * index, index })}
-        renderItem={({ item }) => (
-          <View style={{ width: SCREEN_W, height: 280, overflow: 'hidden' }}>
-            <Image source={{ uri: item.uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(10,10,20,0.42)' }]} />
-            <View style={{ position: 'absolute', bottom: 40, left: 20, right: 20 }}>
-              <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '500', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>
-                {item.sub}
-              </Text>
-              <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800' }}>{item.label}</Text>
-            </View>
-          </View>
-        )}
+        renderItem={({ item }) => <HeroSlide item={item} />}
       />
       {/* Dots */}
       <View style={{ position: 'absolute', bottom: 14, alignSelf: 'center', flexDirection: 'row', gap: 4 }}>
@@ -242,7 +274,10 @@ export default function CulturalGallery({ category: categoryProp, searchQuery: s
   const [items, setItems]                   = useState<CulturalItem[]>([]);
   const [loading, setLoading]               = useState(true);
   const [fromCache, setFromCache]           = useState(false);
+  const [errorMessage, setErrorMessage]     = useState<string | null>(null);
   const [galleryKey, setGalleryKey]         = useState(0);
+  const router = useRouter();
+  const filterOpacity = useRef(new Animated.Value(1)).current;
 
   const headerFade  = useRef(new Animated.Value(0)).current;
   const headerSlide = useRef(new Animated.Value(-24)).current;
@@ -260,14 +295,16 @@ export default function CulturalGallery({ category: categoryProp, searchQuery: s
 
   const load = useCallback(async (cancelled: { value: boolean }) => {
     setLoading(true);
-    try {
-      const result = await fetchCulturalItems(activeCategory);
-      if (!cancelled.value) { setItems(result.items); setFromCache(result.fromCache); }
-    } catch {
-      if (!cancelled.value) { setItems(FALLBACK_CULTURAL_ITEMS); setFromCache(true); }
-    } finally {
-      if (!cancelled.value) setLoading(false);
+    setErrorMessage(null);
+
+    const result = await fetchCulturalItems(activeCategory);
+    if (!cancelled.value) {
+      setItems(result.items);
+      setFromCache(result.fromCache);
+      setErrorMessage(result.error ?? null);
     }
+
+    if (!cancelled.value) setLoading(false);
   }, [activeCategory]);
 
   useEffect(() => {
@@ -276,12 +313,33 @@ export default function CulturalGallery({ category: categoryProp, searchQuery: s
     return () => { cancelled.value = true; };
   }, [load, galleryKey]);
 
-  const displayed = searchQuery.trim()
-    ? items.filter(i =>
-        i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        i.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : items;
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(filterOpacity, { toValue: 0.85, duration: 120, useNativeDriver: true }),
+      Animated.timing(filterOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
+    ]).start();
+  }, [activeCategory, searchQuery, items.length]);
+
+  const handleSelectItem = useCallback((item: CulturalItem) => {
+    router.push(ROUTES.culturalDetail(item.id));
+  }, [router]);
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const displayed = items.filter((item) => {
+    const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
+    if (!matchesCategory) return false;
+
+    if (!normalizedQuery) return true;
+
+    return (
+      item.name.toLowerCase().includes(normalizedQuery) ||
+      item.nameSindhi.toLowerCase().includes(normalizedQuery) ||
+      item.category.toLowerCase().includes(normalizedQuery) ||
+      item.origin.toLowerCase().includes(normalizedQuery) ||
+      item.description.toLowerCase().includes(normalizedQuery) ||
+      item.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery))
+    );
+  });
 
   return (
     <View style={styles.root}>
@@ -333,6 +391,11 @@ export default function CulturalGallery({ category: categoryProp, searchQuery: s
           <Text style={styles.cacheText}>📡 Showing local data — connect for live Firebase content</Text>
         </View>
       )}
+      {errorMessage ? (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        </View>
+      ) : null}
 
       {/* Content */}
       {loading ? (
@@ -351,9 +414,16 @@ export default function CulturalGallery({ category: categoryProp, searchQuery: s
           </Text>
         </View>
       ) : (
-        displayed.map((item, index) => (
-          <AnimatedCulturalCard key={item.id} item={item} index={index} />
-        ))
+        <Animated.View style={{ opacity: filterOpacity }}>
+          {displayed.map((item, index) => (
+            <AnimatedCulturalCard
+              key={item.id}
+              item={item}
+              index={index}
+              onPress={handleSelectItem}
+            />
+          ))}
+        </Animated.View>
       )}
 
       {/* Reload */}
@@ -389,6 +459,21 @@ const styles = StyleSheet.create({
   tabRow: { paddingHorizontal: 16, paddingBottom: 12, flexDirection: 'row', alignItems: 'center' },
   cacheBanner: { marginHorizontal: 16, marginBottom: 12, backgroundColor: '#FEF3C7', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8, borderLeftWidth: 3, borderLeftColor: '#F59E0B' },
   cacheText: { fontSize: 12, color: '#92400E' },
+  errorBanner: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: '#FFF4F4',
+    borderWidth: 1,
+    borderColor: '#F5C2C7',
+  },
+  errorText: {
+    color: '#9B1C1C',
+    fontSize: 13,
+    lineHeight: 20,
+  },
   centre: { paddingVertical: 48, alignItems: 'center' },
   loadingText: { color: '#C0392B', fontSize: 14, fontWeight: '600' },
   emptyText: { color: '#888', fontSize: 15, textAlign: 'center', paddingHorizontal: 32 },

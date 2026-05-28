@@ -3,18 +3,17 @@
 // Uses React Native Animated API only — no extra dependencies.
 // Features: image carousel, shimmer loader, Ajrak border, press animation.
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  Dimensions,
-  FlatList,
-  Image,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Animated,
+    Dimensions,
+    FlatList,
+    Image,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    View
 } from 'react-native';
 import { CulturalItem } from '../data/culturalItems';
 
@@ -87,13 +86,35 @@ function ImageCarousel({
   images,
   accentColor,
   itemName,
+  onItemLoad,
 }: {
-  images: string[];
+  images: any[];
   accentColor: string;
   itemName: string;
+  onItemLoad?: () => void;
 }) {
   const scrollX = useRef(new Animated.Value(0)).current;
+  const flatRef = useRef<FlatList>(null);
+  const currentIndex = useRef(0);
+  const autoPlay = useRef<ReturnType<typeof setInterval> | null>(null);
   const [errored, setErrored] = useState<Record<number, boolean>>({});
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+    if (autoPlay.current !== null) {
+      clearInterval(autoPlay.current);
+    }
+    autoPlay.current = setInterval(() => {
+      currentIndex.current = (currentIndex.current + 1) % images.length;
+      flatRef.current?.scrollToIndex({ index: currentIndex.current, animated: true });
+    }, 4200);
+    return () => {
+      if (autoPlay.current !== null) {
+        clearInterval(autoPlay.current);
+        autoPlay.current = null;
+      }
+    };
+  }, [images.length]);
 
   if (images.length === 0) return null;
   if (images.length === 1) return null; // Single image handled by parent
@@ -101,6 +122,7 @@ function ImageCarousel({
   return (
     <View style={carouselStyles.container}>
       <Animated.FlatList
+        ref={flatRef as any}
         data={images}
         keyExtractor={(_, i) => String(i)}
         horizontal
@@ -111,16 +133,27 @@ function ImageCarousel({
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
           { useNativeDriver: false }
         )}
-        renderItem={({ item: uri, index }) =>
-          errored[index] ? null : (
+        onMomentumScrollEnd={({ nativeEvent }) => {
+          currentIndex.current = Math.round(nativeEvent.contentOffset.x / CARD_W);
+        }}
+        renderItem={({ item: imageSource, index }) => {
+          if (errored[index]) return null;
+          const source = typeof imageSource === 'string'
+            ? {
+                uri: imageSource,
+                headers: { 'User-Agent': 'SindhSagaApp/1.0 (https://sindhsaga.org; contact@sindhsaga.org)' },
+              }
+            : imageSource;
+          return (
             <Image
-              source={{ uri }}
+              source={source}
               style={[carouselStyles.image, { width: CARD_W }]}
               resizeMode="cover"
+              onLoad={() => onItemLoad?.()}
               onError={() => setErrored((e) => ({ ...e, [index]: true }))}
             />
-          )
-        }
+          );
+        }}
       />
       {/* Dot indicators */}
       <View style={carouselStyles.dots}>
@@ -148,7 +181,7 @@ function ImageCarousel({
 }
 const carouselStyles = StyleSheet.create({
   container: { position: 'relative' },
-  image: { height: 220 },
+  image: { width: CARD_W, height: 230 },
   dots: {
     position: 'absolute',
     bottom: 10,
@@ -195,9 +228,24 @@ export default function AnimatedCulturalCard({ item, index, onPress }: Props) {
   const handlePressOut = () =>
     Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, tension: 300, friction: 12 }).start();
 
-  // All images for this card: primary + gallery
-  const allImages = [item.imageUrl, ...(item.galleryImages ?? [])].filter(Boolean);
-  const hasMultiple = allImages.length > 1;
+  const imageOpacity = useRef(new Animated.Value(0)).current;
+  const fadeInImage = () => {
+    Animated.timing(imageOpacity, { toValue: 1, duration: 350, useNativeDriver: true }).start();
+  };
+
+  // Resolve image source: use local bundled assets first, remote only when no local source exists.
+  const primarySource = item.imageSource
+    ? item.imageSource
+    : item.imageUrl
+      ? { uri: item.imageUrl, headers: { 'User-Agent': 'SindhSagaApp/1.0 (https://sindhsaga.org; contact@sindhsaga.org)' } }
+      : null;
+
+  const carouselImages = [
+    ...(item.imageSource ? [item.imageSource] : item.imageUrl ? [{ uri: item.imageUrl, headers: { 'User-Agent': 'SindhSagaApp/1.0 (https://sindhsaga.org; contact@sindhsaga.org)' } }] : []),
+    ...(item.galleryImages ?? []),
+  ].filter(Boolean);
+  const imageCount = carouselImages.length;
+  const hasMultiple = imageCount > 1;
 
   return (
     <Animated.View
@@ -226,12 +274,15 @@ export default function AnimatedCulturalCard({ item, index, onPress }: Props) {
           )}
 
           {/* Primary image (always shown, carousel overlays if multiple) */}
-          {!imgError && !hasMultiple && (
-            <Image
-              source={{ uri: item.imageUrl }}
-              style={[styles.image, !imgLoaded && styles.hidden]}
+          {!imgError && !hasMultiple && primarySource && (
+            <Animated.Image
+              source={primarySource}
+              style={[styles.image, { opacity: imageOpacity }, !imgLoaded && styles.hidden]}
               resizeMode="cover"
-              onLoad={() => setImgLoaded(true)}
+              onLoad={() => {
+                setImgLoaded(true);
+                fadeInImage();
+              }}
               onError={() => { setImgError(true); setImgLoaded(true); }}
             />
           )}
@@ -240,16 +291,10 @@ export default function AnimatedCulturalCard({ item, index, onPress }: Props) {
           {hasMultiple && (
             <View style={[styles.image, !imgLoaded && styles.hidden]}>
               <ImageCarousel
-                images={allImages}
+                images={carouselImages}
                 accentColor={item.accentColor}
                 itemName={item.name}
-              />
-              {/* Trigger load state via first image */}
-              <Image
-                source={{ uri: item.imageUrl }}
-                style={StyleSheet.absoluteFillObject}
-                onLoad={() => setImgLoaded(true)}
-                onError={() => { setImgError(true); setImgLoaded(true); }}
+                onItemLoad={() => setImgLoaded(true)}
               />
             </View>
           )}
@@ -279,7 +324,7 @@ export default function AnimatedCulturalCard({ item, index, onPress }: Props) {
           {/* Multi-image indicator */}
           {hasMultiple && imgLoaded && (
             <View style={styles.multiIndicator}>
-              <Text style={styles.multiIndicatorText}>1 / {allImages.length}</Text>
+              <Text style={styles.multiIndicatorText}>1 / {imageCount}</Text>
             </View>
           )}
         </View>
