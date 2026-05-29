@@ -7,7 +7,10 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import AIStorySection from '@/components/AIStorySection';
+import ChildSafetySection from '@/components/ChildSafetySection';
 import CulturalGallery from '@/components/CulturalGallery';
+import EnergyPointsSection from '@/components/EnergyPointsSection';
+import WorkflowTimelineSection from '@/components/WorkflowTimelineSection';
 import {
   AjrakButton,
   CulturalCard,
@@ -76,6 +79,13 @@ export default function HomeScreen() {
         <View style={styles.actions}>
           <AjrakButton label="Record a story" fullWidth onPress={() => router.push(ROUTES.record)} />
           <AjrakButton
+            label="Submit your story"
+            variant="secondary"
+            fullWidth
+            onPress={() => router.push(ROUTES.submitStory)}
+            style={styles.actionGap}
+          />
+          <AjrakButton
             label="Explore stories"
             variant="outline"
             fullWidth
@@ -83,6 +93,12 @@ export default function HomeScreen() {
             style={styles.actionGap}
           />
         </View>
+
+        <EnergyPointsSection />
+
+        <ChildSafetySection />
+
+        <WorkflowTimelineSection />
 
         <CulturalGallery category="All" />
 
@@ -136,7 +152,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: Spacing.screenPadding,
-    paddingBottom: Spacing.md,
+    paddingBottom: Spacing.xl,
   },
   actions: {
     marginBottom: Spacing.xl,

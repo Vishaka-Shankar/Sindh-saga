@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { getLocalImageSourceForItem } from '@/data/culturalItems';
 import { fetchItems, type CulturalItem } from '@/services/api';
 
 export const ITEM_CATEGORIES = ['All', 'Clothing', 'Crafts', 'Food', 'Music'] as const;
@@ -19,7 +20,10 @@ export function useItems() {
     try {
       const normalizedCategory = category === 'All' ? undefined : category.toLowerCase();
       const response = await fetchItems(normalizedCategory);
-      setItems(response);
+      setItems(response.map((item) => ({
+        ...item,
+        imageSource: getLocalImageSourceForItem(item),
+      })));
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : 'We could not load the Sindh gallery.');
       setItems([]);

@@ -9,6 +9,7 @@ import {
     CulturalItem,
     FALLBACK_CULTURAL_ITEMS,
     getCulturalItemById,
+    getLocalImageSourceForItem,
 } from '../data/culturalItems';
 import {
     fetchCollectionDocuments,
@@ -124,7 +125,11 @@ function mapFirestoreToCulturalItem(
     description: String(document.description ?? ''),
     origin: String(document.origin ?? 'Sindh'),
     imageUrl: String(document.imageUrl ?? ''),
-    imageSource: undefined,
+    imageSource: getLocalImageSourceForItem({
+      id: document.id,
+      name: title,
+      imageUrl: String(document.imageUrl ?? ''),
+    }),
     galleryImages: [],
     accentColor: String(document.accentColor ?? '#C0392B'),
     tags: Array.isArray(document.tags)

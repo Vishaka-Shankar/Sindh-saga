@@ -28,6 +28,7 @@ export type CulturalItem = {
   description: string;
   imageUrl: string;
   origin: string;
+  imageSource?: any;
 };
 
 function normalizeItemsResponse<T>(payload: T | { items: T }) {

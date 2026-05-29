@@ -19,6 +19,8 @@ import { CulturalItem } from '../data/culturalItems';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const CARD_W = Math.min(SCREEN_W - 32, 600); // cap for web
+const IMAGE_ASPECT_RATIO = 1.6;
+const IMAGE_HEIGHT = Math.max(220, Math.min(280, Math.round(CARD_W / IMAGE_ASPECT_RATIO)));
 
 interface Props {
   item: CulturalItem;
@@ -145,13 +147,15 @@ function ImageCarousel({
               }
             : imageSource;
           return (
-            <Image
-              source={source}
-              style={[carouselStyles.image, { width: CARD_W }]}
-              resizeMode="cover"
-              onLoad={() => onItemLoad?.()}
-              onError={() => setErrored((e) => ({ ...e, [index]: true }))}
-            />
+            <View style={[carouselStyles.page, { width: CARD_W, height: IMAGE_HEIGHT }]}> 
+              <Image
+                source={source}
+                style={carouselStyles.image}
+                resizeMode="cover"
+                onLoad={() => onItemLoad?.()}
+                onError={() => setErrored((e) => ({ ...e, [index]: true }))}
+              />
+            </View>
           );
         }}
       />
@@ -181,7 +185,8 @@ function ImageCarousel({
 }
 const carouselStyles = StyleSheet.create({
   container: { position: 'relative' },
-  image: { width: CARD_W, height: 230 },
+  page: { justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  image: { width: '100%', height: '100%' },
   dots: {
     position: 'absolute',
     bottom: 10,
@@ -287,6 +292,9 @@ export default function AnimatedCulturalCard({ item, index, onPress }: Props) {
             />
           )}
 
+          {/* Slight dark overlay for better text contrast */}
+          <View style={styles.darkOverlay} pointerEvents="none" />
+
           {/* Multi-image carousel */}
           {hasMultiple && (
             <View style={[styles.image, !imgLoaded && styles.hidden]}>
@@ -385,9 +393,22 @@ const styles = StyleSheet.create({
     }),
   },
 
-  imageWrapper: { height: 230, position: 'relative', overflow: 'hidden' },
-  image: { width: '100%', height: 230 },
+  imageWrapper: {
+    aspectRatio: IMAGE_ASPECT_RATIO,
+    minHeight: 220,
+    maxHeight: 280,
+    width: '100%',
+    position: 'relative',
+    overflow: 'hidden',
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+  },
+  image: { width: '100%', height: '100%' },
   hidden: { opacity: 0, position: 'absolute' },
+  darkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.16)',
+  },
 
   shimmer: {
     ...StyleSheet.absoluteFillObject,

@@ -66,10 +66,12 @@ export function ItemDetailModal({
             ) : itemDetails ? (
               <>
                 <Image
-                  source={{
-                    uri: itemDetails.imageUrl,
-                    headers: { 'User-Agent': 'SindhSagaApp/1.0 (https://sindhsaga.org; contact@sindhsaga.org)' }
-                  }}
+                  source={
+                    itemDetails.imageSource ?? {
+                      uri: itemDetails.imageUrl,
+                      headers: { 'User-Agent': 'SindhSagaApp/1.0 (https://sindhsaga.org; contact@sindhsaga.org)' },
+                    }
+                  }
                   style={styles.featureImage}
                   contentFit="cover"
                 />

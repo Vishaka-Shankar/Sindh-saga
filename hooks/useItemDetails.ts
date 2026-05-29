@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { getLocalImageSourceForItem } from '@/data/culturalItems';
 import { fetchItemDetails, fetchItems, type CulturalItem } from '@/services/api';
 
 export function useItemDetails(selectedItemId: string | null) {
@@ -22,7 +23,10 @@ export function useItemDetails(selectedItemId: string | null) {
 
       try {
         const details = await fetchItemDetails(id);
-        setItemDetails(details);
+        setItemDetails({
+          ...details,
+          imageSource: getLocalImageSourceForItem(details),
+        });
 
         const categoryItems = await fetchItems(details.category.toLowerCase());
         setRelatedItems(categoryItems.filter((item) => item.id !== details.id).slice(0, 3));

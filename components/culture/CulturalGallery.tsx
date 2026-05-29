@@ -14,6 +14,7 @@ import { CulturalCard, CulturalHeader, CulturalInput, HeritageSection } from '@/
 import { SagaColors } from '@/constants/colors';
 import { Spacing } from '@/constants/spacing';
 import { Typography } from '@/constants/typography';
+import { getLocalImageSourceForItem } from '@/data/culturalItems';
 import { useItemDetails } from '@/hooks/useItemDetails';
 import { useItems } from '@/hooks/useItems';
 import { useSearch } from '@/hooks/useSearch';
@@ -90,7 +91,11 @@ export function CulturalGallery() {
                   style={styles.suggestionItem}
                   onPress={() => handleSelectSuggestion(suggestion.id)}
                 >
-                  <Image source={suggestion.imageUrl} style={styles.suggestionThumb} contentFit="cover" />
+                  <Image
+                    source={getLocalImageSourceForItem(suggestion) ?? { uri: suggestion.imageUrl }}
+                    style={styles.suggestionThumb}
+                    contentFit="cover"
+                  />
                   <View style={styles.suggestionTextWrap}>
                     <Text style={styles.suggestionTitle}>{suggestion.name}</Text>
                     <Text style={styles.suggestionCategory}>{suggestion.category}</Text>

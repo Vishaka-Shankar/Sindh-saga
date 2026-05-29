@@ -33,6 +33,31 @@ export const LOCAL_IMAGES: Record<string, any> = {
   'surando-bijal':           require('../assets/images/surando-bijal.jpg'),
 };
 
+const LOCAL_IMAGE_KEYS = Object.keys(LOCAL_IMAGES).sort((a, b) => b.length - a.length);
+
+function normalizeText(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/_/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+}
+
+export function getLocalImageSourceForItem(item: { id?: string; name?: string; imageUrl?: string }) {
+  const candidates = [item.id, item.name, item.imageUrl].filter(Boolean).map((value) => normalizeText(String(value)));
+
+  for (const candidate of candidates) {
+    for (const key of LOCAL_IMAGE_KEYS) {
+      if (candidate.includes(key)) {
+        return LOCAL_IMAGES[key];
+      }
+    }
+  }
+
+  return undefined;
+}
+
 export const FALLBACK_CULTURAL_ITEMS: CulturalItem[] = [
   // ── Crafts ───────────────────────────────────────────────────────────────
   {

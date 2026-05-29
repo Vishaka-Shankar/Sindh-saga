@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { getLocalImageSourceForItem } from '@/data/culturalItems';
 import { searchItems, type CulturalItem } from '@/services/api';
 
 export function useSearch() {
@@ -28,7 +29,10 @@ export function useSearch() {
       void (async () => {
         try {
           const results = await searchItems(query.trim());
-          setSuggestions(results);
+          setSuggestions(results.map((item) => ({
+            ...item,
+            imageSource: getLocalImageSourceForItem(item),
+          })));
           setError(null);
         } catch (searchError) {
           setError(searchError instanceof Error ? searchError.message : 'Unable to complete search.');

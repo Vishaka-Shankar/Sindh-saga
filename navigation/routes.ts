@@ -12,6 +12,7 @@ export const ROUTES = {
   profile: '/profile' as Href,
   about: '/about' as Href,
   contact: '/contact' as Href,
+  submitStory: '/submit-story' as Href,
   storyDetail: (id: string) => `/story/${id}` as Href,
   culturalDetail: (id: string) => `/cultural/${id}` as Href,
 } as const;
