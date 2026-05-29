@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import AIStorySection from '@/components/AIStorySection';
 import CulturalGallery from '@/components/CulturalGallery';
 import {
   AjrakButton,
@@ -123,6 +124,8 @@ export default function HomeScreen() {
             onPress={() => router.push(ROUTES.storyDetail(featured.id))}
           />
         </HeritageSection>
+
+        <AIStorySection />
 
         <CulturalFooter />
       </ScrollView>

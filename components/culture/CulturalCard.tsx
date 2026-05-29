@@ -14,6 +14,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
+import { useTheme } from '@/context';
 import { SindhiBadge } from './SindhiBadge';
 import { SagaColors } from '@/constants/colors';
 import { Shadows } from '@/constants/shadows';
@@ -55,6 +56,8 @@ function CardInner({
   children?: ReactNode;
   hovered: boolean;
 }) {
+  const { colors } = useTheme();
+
   return (
     <>
       <View style={styles.imageWrap}>
@@ -73,15 +76,15 @@ function CardInner({
       </View>
       <View style={styles.body}>
         {badge ? <SindhiBadge label={badge} variant="gold" style={styles.badge} /> : null}
-        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         {description ? (
-          <Text style={styles.description} numberOfLines={3}>
+          <Text style={[styles.description, { color: colors.textMuted }]} numberOfLines={3}>
             {description}
           </Text>
         ) : null}
         {children}
       </View>
-      <View style={styles.ajrakEdge} />
+      <View style={[styles.ajrakEdge, { backgroundColor: colors.deepIndigo }]} />
     </>
   );
 }
@@ -97,10 +100,11 @@ export function CulturalCard({
   style,
 }: CulturalCardProps) {
   const { hoverEnabled } = useHoverable();
+  const { colors } = useTheme();
 
   if (!onPress) {
     return (
-      <View style={[styles.card, style]}>
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, style]}>
         <CardInner
           title={title}
           description={description}
@@ -124,7 +128,11 @@ export function CulturalCard({
         const active = pressed || isHovered;
         return [
           styles.card,
-          active && !pressed && isHovered && styles.cardHover,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+          },
+          active && !pressed && isHovered && [styles.cardHover, { borderColor: colors.brickRed }],
           pressed && styles.cardActive,
           style,
         ];

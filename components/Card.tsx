@@ -5,6 +5,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
+import { useTheme } from '@/context';
 import { SagaColors } from '@/constants/colors';
 import { Shadows } from '@/constants/shadows';
 import { Spacing } from '@/constants/spacing';
@@ -16,7 +17,16 @@ type CardProps = PressableProps & {
 };
 
 export function Card({ children, style, onPress, accent, ...rest }: CardProps) {
-  const cardStyle = [styles.card, accent && styles.accent, style];
+  const { colors } = useTheme();
+  const cardStyle = [
+    styles.card,
+    {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+    },
+    accent && { borderLeftColor: colors.brickRed },
+    style,
+  ];
 
   if (onPress) {
     return (

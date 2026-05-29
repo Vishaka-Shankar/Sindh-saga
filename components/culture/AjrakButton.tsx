@@ -13,6 +13,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
+import { useTheme } from '@/context';
 import { SagaColors } from '@/constants/colors';
 import { Shadows } from '@/constants/shadows';
 import { Spacing } from '@/constants/spacing';
@@ -38,7 +39,22 @@ export function AjrakButton({
   ...rest
 }: AjrakButtonProps) {
   const { hoverEnabled } = useHoverable();
+  const { colors } = useTheme();
   const isDisabled = disabled || loading;
+
+  const variantStyles = {
+    primary: { backgroundColor: colors.brickRed, borderColor: colors.brickDark },
+    secondary: { backgroundColor: colors.deepIndigo, borderColor: colors.indigoDark },
+    outline: { backgroundColor: colors.surface, borderColor: colors.brickRed },
+    ghost: { backgroundColor: 'transparent', borderColor: 'transparent' },
+  };
+
+  const labelStyles = {
+    primary: { color: colors.ivory },
+    secondary: { color: colors.ivory },
+    outline: { color: colors.brickRed },
+    ghost: { color: colors.deepIndigo },
+  };
 
   return (
     <Pressable
@@ -51,7 +67,7 @@ export function AjrakButton({
         return [
           styles.base,
           fullWidth && styles.fullWidth,
-          styles[variant],
+          variantStyles[variant],
           variant !== 'outline' && variant !== 'ghost' && Shadows.soft,
           active && !isDisabled && styles.active,
           hovered && !pressed && !isDisabled && styles.hover,
@@ -61,9 +77,9 @@ export function AjrakButton({
       }}
       {...rest}>
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? SagaColors.brickRed : SagaColors.ivory} />
+        <ActivityIndicator color={variant === 'outline' ? colors.brickRed : colors.ivory} />
       ) : (
-        <Text style={[styles.label, styles[`label_${variant}`]]}>{label}</Text>
+        <Text style={[styles.label, labelStyles[variant]]}>{label}</Text>
       )}
     </Pressable>
   );

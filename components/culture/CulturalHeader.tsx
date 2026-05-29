@@ -6,6 +6,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useTheme } from '@/context';
 import { AjrakBorderStrip } from './svg/AjrakBorderStrip';
 import { RuliStrip } from './RuliStrip';
 import { SagaColors } from '@/constants/colors';
@@ -28,26 +29,27 @@ export function CulturalHeader({
   compact,
 }: CulturalHeaderProps) {
   const insets = useSafeAreaInsets();
-  const isDark = variant === 'dark';
+  const { colors } = useTheme();
+  const isHeaderDark = variant === 'dark';
 
   return (
     <View
       style={[
         styles.wrap,
-        isDark && styles.wrapDark,
+        isHeaderDark && [styles.wrapDark, { backgroundColor: colors.deepIndigo }],
         { paddingTop: insets.top + (compact ? 6 : 12) },
       ]}>
-      {isDark && showPattern ? (
+      {isHeaderDark && showPattern ? (
         <>
           <AjrakBorderStrip height={8} />
           <RuliStrip height={4} style={styles.ruli} />
         </>
       ) : null}
-      <Text style={[styles.title, isDark && styles.titleDark]}>{title}</Text>
+      <Text style={[styles.title, { color: isHeaderDark ? colors.ivory : colors.text }]}>{title}</Text>
       {subtitle ? (
-        <Text style={[styles.subtitle, isDark && styles.subtitleDark]}>{subtitle}</Text>
+        <Text style={[styles.subtitle, { color: isHeaderDark ? colors.textMutedOnDark : colors.textMuted }]}>{subtitle}</Text>
       ) : null}
-      {!isDark && showPattern ? <View style={styles.lightAccent} /> : null}
+      {!isHeaderDark && showPattern ? <View style={[styles.lightAccent, { backgroundColor: colors.brickRed }]} /> : null}
     </View>
   );
 }

@@ -25,6 +25,7 @@ import { SagaColors } from '@/constants/colors';
 import { Typography } from '@/constants/typography';
 import { useLoading } from '@/context/LoadingContext';
 import { useScroll } from '@/context/ScrollContext';
+import { useTheme } from '@/context';
 import { MOCK_STORIES, type MockStory } from '@/data/mockStories';
 import { ROUTES } from '@/navigation/routes';
 import { AjrakMotif } from './svg/AjrakMotif';
@@ -38,6 +39,7 @@ export function Navbar({ onOpenDrawer }: NavbarProps) {
   const { scrolled } = useScroll();
   const { simulateAPILoad } = useLoading();
   const { width: windowWidth } = useWindowDimensions();
+  const { isDark, toggleTheme, colors } = useTheme();
 
   const isMobile = windowWidth <= 768;
   const inputRef = useRef<TextInput>(null);
@@ -58,14 +60,14 @@ export function Navbar({ onOpenDrawer }: NavbarProps) {
   useEffect(() => {
     if (scrolled) {
       navHeight.value = withTiming(62, { duration: 250 });
-      navBg.value = withTiming(SagaColors.ivory, { duration: 250 });
-      navBorder.value = withTiming(SagaColors.border, { duration: 250 });
+      navBg.value = withTiming(colors.background, { duration: 250 });
+      navBorder.value = withTiming(colors.border, { duration: 250 });
     } else {
       navHeight.value = withTiming(80, { duration: 250 });
       navBg.value = withTiming('rgba(250, 243, 224, 0)', { duration: 250 });
       navBorder.value = withTiming('rgba(221, 211, 188, 0)', { duration: 250 });
     }
-  }, [scrolled, navHeight, navBg, navBorder]);
+  }, [scrolled, navHeight, navBg, navBorder, colors]);
 
   useEffect(() => {
     if (isSearchExpanded) {
@@ -130,7 +132,7 @@ export function Navbar({ onOpenDrawer }: NavbarProps) {
           onPress={() => handleNavigate(ROUTES.home)}
         >
           <AjrakMotif size={28} />
-          <Text style={styles.logoText}>Sindh Saba</Text>
+          <Text style={[styles.logoText, { color: colors.deepIndigo }]}>Sindh Saba</Text>
         </Pressable>
 
         {/* Center Section: Desktop Nav Links */}
@@ -147,24 +149,24 @@ export function Navbar({ onOpenDrawer }: NavbarProps) {
                 onPress={() => handleNavigate(link.route)}
                 style={styles.navLinkItem}
               >
-                <Text style={styles.navLinkLabel}>{link.label}</Text>
+                <Text style={[styles.navLinkLabel, { color: colors.textMuted }]}>{link.label}</Text>
               </Pressable>
             ))}
           </View>
         )}
 
-        {/* Right Section: Inline Search & Mobile Hamburger */}
+        {/* Right Section: Inline Search, Theme Toggle & Mobile Hamburger */}
         <View style={styles.actions}>
           {/* Expanding Search Bar Wrapper */}
           <View style={styles.searchWrapper}>
-            <Animated.View style={[styles.searchContainer, searchAnimatedStyle]}>
+            <Animated.View style={[styles.searchContainer, { backgroundColor: `${colors.deepIndigo}15`, borderColor: `${colors.deepIndigo}25` }, searchAnimatedStyle]}>
               <TextInput
                 ref={inputRef}
                 value={searchQuery}
                 onChangeText={handleSearchChange}
                 placeholder="Search stories..."
-                placeholderTextColor={SagaColors.textMuted}
-                style={styles.searchInput}
+                placeholderTextColor={colors.textMuted}
+                style={[styles.searchInput, { color: colors.text }]}
                 onBlur={() => {
                   if (searchQuery.trim() === '') {
                     setIsSearchExpanded(false);
@@ -185,23 +187,37 @@ export function Navbar({ onOpenDrawer }: NavbarProps) {
                   setTimeout(() => inputRef.current?.focus(), 100);
                 }
               }}
-              style={styles.actionBtn}
+              style={[styles.actionBtn, { backgroundColor: `${colors.deepIndigo}10` }]}
             >
               <Ionicons
                 name="search-outline"
                 size={22}
-                color={SagaColors.deepIndigo}
+                color={colors.deepIndigo}
               />
             </Pressable>
           </View>
 
+          {/* Premium Theme Toggle Button */}
+          <Pressable
+            onPress={toggleTheme}
+            style={[styles.actionBtn, { backgroundColor: `${colors.deepIndigo}10` }]}
+            accessibilityRole="button"
+            accessibilityLabel="Toggle Light or Dark theme"
+          >
+            <Ionicons
+              name={isDark ? 'sunny-outline' : 'moon-outline'}
+              size={22}
+              color={colors.deepIndigo}
+            />
+          </Pressable>
+
           {/* Hamburger Menu (Mobile Only) */}
           {isMobile && (
-            <Pressable style={styles.actionBtn} onPress={onOpenDrawer}>
+            <Pressable style={[styles.actionBtn, { backgroundColor: `${colors.deepIndigo}10` }]} onPress={onOpenDrawer}>
               <Ionicons
                 name="menu-outline"
                 size={26}
-                color={SagaColors.deepIndigo}
+                color={colors.deepIndigo}
               />
             </Pressable>
           )}
@@ -210,7 +226,7 @@ export function Navbar({ onOpenDrawer }: NavbarProps) {
 
       {/* Floating Dropdown Results Panel */}
       {isSearchExpanded && searchQuery.trim() !== '' && (
-        <View style={styles.dropdownPanel}>
+        <View style={[styles.dropdownPanel, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {searchResults.length > 0 ? (
             <FlatList
               data={searchResults}
@@ -220,12 +236,13 @@ export function Navbar({ onOpenDrawer }: NavbarProps) {
                 <Pressable
                   style={({ pressed }) => [
                     styles.dropdownItem,
-                    pressed && styles.dropdownItemPressed,
+                    { borderBottomColor: `${colors.deepIndigo}12` },
+                    pressed && { backgroundColor: `${colors.deepIndigo}10` },
                   ]}
                   onPress={() => handleSearchResultSelect(item.id)}
                 >
-                  <Text style={styles.dropdownTitle}>{item.title}</Text>
-                  <Text style={styles.dropdownExcerpt} numberOfLines={1}>
+                  <Text style={[styles.dropdownTitle, { color: colors.deepIndigo }]}>{item.title}</Text>
+                  <Text style={[styles.dropdownExcerpt, { color: colors.textMuted }]} numberOfLines={1}>
                     {item.excerpt}
                   </Text>
                 </Pressable>
@@ -233,7 +250,7 @@ export function Navbar({ onOpenDrawer }: NavbarProps) {
             />
           ) : (
             <View style={styles.noResults}>
-              <Text style={styles.noResultsText}>No stories match your search</Text>
+              <Text style={[styles.noResultsText, { color: colors.textMuted }]}>No stories match your search</Text>
             </View>
           )}
         </View>

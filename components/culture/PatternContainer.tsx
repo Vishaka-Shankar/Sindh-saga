@@ -6,6 +6,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { useTheme } from '@/context';
 import { AjrakTilePattern } from './svg/AjrakTilePattern';
 import { SagaColors } from '@/constants/colors';
 
@@ -20,8 +21,10 @@ export function PatternContainer({
   style,
   patternOpacity = 0.12,
 }: PatternContainerProps) {
+  const { colors } = useTheme();
+
   return (
-    <View style={[styles.root, style]}>
+    <View style={[styles.root, { backgroundColor: colors.background }, style]}>
       <View style={styles.patternLayer} pointerEvents="none">
         <AjrakTilePattern opacity={patternOpacity} />
       </View>
