@@ -12,13 +12,13 @@ import CulturalGallery from '@/components/CulturalGallery';
 import EnergyPointsSection from '@/components/EnergyPointsSection';
 import WorkflowTimelineSection from '@/components/WorkflowTimelineSection';
 import {
-  AjrakButton,
-  CulturalCard,
-  CulturalFooter,
-  CulturalHero,
-  HeritageRowCard,
-  HeritageSection,
-  PatternContainer,
+    AjrakButton,
+    CulturalCard,
+    CulturalFooter,
+    CulturalHero,
+    HeritageRowCard,
+    HeritageSection,
+    PatternContainer,
 } from '@/components/culture';
 import { SagaColors } from '@/constants/colors';
 import { Spacing } from '@/constants/spacing';

@@ -6,7 +6,6 @@ import { SagaColors } from '@/constants/colors';
 import { Shadows } from '@/constants/shadows';
 import { Spacing } from '@/constants/spacing';
 import { Typography } from '@/constants/typography';
-import { useAuth } from '@/context';
 import { getUserPoints } from '@/services/pointsService';
 
 type RewardCardProps = {
@@ -29,8 +28,11 @@ function RewardCard({ label, value, caption, variant = 'secondary', style }: Rew
   );
 }
 
-export default function EnergyPointsSection() {
-  const { userId } = useAuth();
+type EnergyPointsSectionProps = {
+  userId?: string | null;
+};
+
+export default function EnergyPointsSection({ userId }: EnergyPointsSectionProps) {
   const [points, setPoints] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
