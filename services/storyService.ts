@@ -13,7 +13,7 @@ import {
     type Unsubscribe,
 } from 'firebase/firestore';
 
-import { COLLECTIONS, getFirestoreDb } from '@/firebase';
+import { COLLECTIONS, getFirestoreDb } from '@/firebase/firestore';
 import type { CreateStoryInput, Story, StoryStatus } from '@/types';
 
 function mapStoryDoc(id: string, data: DocumentData): Story {
@@ -137,10 +137,26 @@ export async function approveStory(storyId: string): Promise<void> {
   const db = getFirestoreDb();
   if (!db) throw new Error('Firestore is not available.');
 
+  // Get the story to retrieve userId
+  const storyDoc = await getDoc(doc(db, COLLECTIONS.stories, storyId));
+  if (!storyDoc.exists()) throw new Error('Story not found');
+
+  const userId = storyDoc.data()?.userId;
+  if (!userId) throw new Error('Story has no userId');
+
+  // Update moderation status
   await updateDoc(doc(db, COLLECTIONS.stories, storyId), {
     moderationStatus: 'approved',
     publishedAt: new Date().toISOString(),
   });
+
+  // Award points for story approval
+  try {
+    await addPoints(userId, POINT_VALUES.STORY_APPROVED, 'Story approved by parent');
+  } catch (error) {
+    console.error('Failed to award points for story approval:', error);
+    // Don't fail the approval if points awarding fails
+  }
 }
 
 export async function rejectStory(storyId: string): Promise<void> {

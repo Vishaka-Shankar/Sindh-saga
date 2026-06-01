@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { HeritageSection } from '@/components/culture';
@@ -5,6 +6,8 @@ import { SagaColors } from '@/constants/colors';
 import { Shadows } from '@/constants/shadows';
 import { Spacing } from '@/constants/spacing';
 import { Typography } from '@/constants/typography';
+import { useAuth } from '@/context';
+import { getUserPoints } from '@/services/pointsService';
 
 type RewardCardProps = {
   label: string;
@@ -27,6 +30,32 @@ function RewardCard({ label, value, caption, variant = 'secondary', style }: Rew
 }
 
 export default function EnergyPointsSection() {
+  const { userId } = useAuth();
+  const [points, setPoints] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPoints = async () => {
+      if (!userId) {
+        setPoints(0);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const userPoints = await getUserPoints(userId);
+        setPoints(userPoints);
+      } catch (error) {
+        console.error('Error fetching points:', error);
+        setPoints(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPoints();
+  }, [userId]);
+
   return (
     <HeritageSection
       title="Energy Points"
@@ -36,8 +65,8 @@ export default function EnergyPointsSection() {
     >
       <View style={styles.cardRow}>
         <RewardCard
-          label="You earned"
-          value="50"
+          label="Your Points"
+          value={loading ? '...' : points.toString()}
           caption="Energy Points"
           variant="primary"
           style={styles.cardSpacing}

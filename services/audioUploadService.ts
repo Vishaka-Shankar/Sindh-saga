@@ -102,5 +102,13 @@ export async function uploadRecording(localUri: string): Promise<AudioUploadResu
     artworkGeneratedAt: null,
   });
 
+  // Award points for story upload
+  try {
+    await addPoints(userId, POINT_VALUES.STORY_UPLOADED, 'Story recorded and uploaded');
+  } catch (error) {
+    console.error('Failed to award points for story upload:', error);
+    // Don't fail the upload if points awarding fails
+  }
+
   return { audioUrl, storyId, userId, firestoreDocId: docRef.id };
 }
