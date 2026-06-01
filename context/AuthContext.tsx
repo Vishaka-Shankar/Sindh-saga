@@ -1,15 +1,15 @@
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+    type ReactNode,
 } from 'react';
 
-import { ensureAnonymousUser, signOut as authSignOut, subscribeToAuth } from '@/services/authService';
-import { isFirebaseConfigured } from '@/firebase';
+import { isFirebaseConfigured, validateFirebaseConfig } from '@/firebase/config';
+import { signOut as authSignOut, ensureAnonymousUser, subscribeToAuth } from '@/services/authService';
 
 type AuthContextValue = {
   userId: string | null;
@@ -29,7 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isFirebaseConfigured) {
       setInitializing(false);
-      setError('Add Firebase keys to .env (see .env.example).');
+      const validation = validateFirebaseConfig();
+      setError(`Firebase not configured: ${validation.errors.join(', ')}. See .env.example.`);
       return;
     }
 

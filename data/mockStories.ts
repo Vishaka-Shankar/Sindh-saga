@@ -12,6 +12,7 @@ export type MockStory = {
   storyText: string;
   recordedAt: string;
   duration: string;
+  artworkUrl?: string;
 };
 
 export const MOCK_USER = {

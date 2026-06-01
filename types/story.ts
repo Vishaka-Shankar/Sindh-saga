@@ -10,9 +10,26 @@ export type Story = {
   audioUrl: string;
   transcript: string;
   storyText: string;
+  artworkUrl?: string;
   status: StoryStatus;
   errorMessage?: string;
   createdAt: Timestamp;
+  // Additional fields from the unified model
+  storyId?: string;
+  storagePath?: string;
+  platform?: 'web' | 'mobile';
+  transcriptLanguage?: string | null;
+  transcriptDurationSeconds?: number | null;
+  transcribedAt?: Timestamp | null;
+  moderationStatus?: 'safe' | 'flagged' | 'pending_review';
+  moderationNotes?: string[] | null;
+  piiEntities?: string[] | null;
+  unsafeCategories?: string[] | null;
+  moderationCheckedAt?: string | null;
+  storyMoral?: string | null;
+  generatedAt?: Timestamp | null;
+  artworkPrompt?: string | null;
+  artworkGeneratedAt?: string | null;
 };
 
 /** Fields written when creating a new story (before upload completes) */

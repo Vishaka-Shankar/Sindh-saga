@@ -1,24 +1,23 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState, useEffect, useRef } from 'react';
-import { ScrollView, StyleSheet, Text, View, Pressable, Animated, Image } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/Card';
 import {
-  AjrakButton,
-  CulturalHeader,
-  DecorativeDivider,
-  PatternContainer,
-  SindhiBadge,
+    AjrakButton,
+    CulturalHeader,
+    DecorativeDivider,
+    PatternContainer,
+    SindhiBadge,
 } from '@/components/culture';
-import { useTheme } from '@/context';
 import { SagaColors } from '@/constants/colors';
 import { Spacing } from '@/constants/spacing';
 import { Typography } from '@/constants/typography';
-import { useScroll } from '@/context';
-import { getMockStoryById } from '@/data/mockStories';
+import { useScroll, useTheme } from '@/context';
 import { AI_STORIES } from '@/data/aiStories';
+import { getMockStoryById } from '@/data/mockStories';
 
 export default function StoryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,7 +25,34 @@ export default function StoryDetailScreen() {
   const insets = useSafeAreaInsets();
   const { setScrollY } = useScroll();
   const { colors } = useTheme();
-  const story = getMockStoryById(id ?? '');
+  const [story, setStory] = useState<Story | MockStory | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch story from Firestore or fallback to mock data
+  useEffect(() => {
+    const fetchStory = async () => {
+      setLoading(true);
+      try {
+        const firestoreStory = await getStory(id ?? '');
+        if (firestoreStory) {
+          setStory(firestoreStory);
+        } else {
+          // Fallback to mock data for archive stories
+          const mockStory = getMockStoryById(id ?? '');
+          setStory(mockStory);
+        }
+      } catch (error) {
+        console.error('Error fetching story:', error);
+        // Fallback to mock data on error
+        const mockStory = getMockStoryById(id ?? '');
+        setStory(mockStory);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStory();
+  }, [id]);
 
   // AI Story integration
   const aiStory = AI_STORIES.find((s) => s.id === id);
@@ -47,11 +73,18 @@ export default function StoryDetailScreen() {
   // Parse duration "M:SS" into total seconds
   const totalDurationSeconds = React.useMemo(() => {
     if (!story) return 0;
-    const parts = story.duration.split(':');
-    if (parts.length === 2) {
-      const min = parseInt(parts[0], 10);
-      const sec = parseInt(parts[1], 10);
-      return min * 60 + sec;
+    // For Firestore stories, use transcriptDurationSeconds if available
+    if ('transcriptDurationSeconds' in story && story.transcriptDurationSeconds) {
+      return story.transcriptDurationSeconds;
+    }
+    // For mock stories, parse duration string
+    if ('duration' in story && story.duration) {
+      const parts = story.duration.split(':');
+      if (parts.length === 2) {
+        const min = parseInt(parts[0], 10);
+        const sec = parseInt(parts[1], 10);
+        return min * 60 + sec;
+      }
     }
     return 180; // fallback
   }, [story]);
@@ -132,6 +165,26 @@ export default function StoryDetailScreen() {
       }
     };
   }, [isPlaying, eqValues]);
+
+  if (loading) {
+    return (
+      <PatternContainer>
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingTop: insets.top + 80 }]}
+          showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onScroll={(event) => {
+            setScrollY(event.nativeEvent.contentOffset.y);
+          }}
+        >
+          <CulturalHeader title="Loading story…" variant="dark" compact />
+          <View style={styles.center}>
+            <Text style={styles.loadingText}>Loading story from Firestore…</Text>
+          </View>
+        </ScrollView>
+      </PatternContainer>
+    );
+  }
 
   if (!story) {
     return (
@@ -279,7 +332,7 @@ export default function StoryDetailScreen() {
               </View>
               <View style={styles.timeRow}>
                 <Text style={[styles.timeText, { color: colors.textMuted }]}>{formatTimeStr(currentTime)}</Text>
-                <Text style={[styles.timeText, { color: colors.textMuted }]}>{story.duration}</Text>
+                <Text style={[styles.timeText, { color: colors.textMuted }]}>{displayDuration}</Text>
               </View>
             </View>
 
@@ -311,7 +364,15 @@ export default function StoryDetailScreen() {
         {/* ── Read Segmented Selector ─────────────────────────────────── */}
         <DecorativeDivider label="Read & Translate" />
 
+        {story.artworkUrl ? (
+          <Card style={[styles.storyArtworkCard, { borderColor: colors.border, backgroundColor: `${colors.ivoryWarm}20`}]}>
+            <Text style={[styles.label, { color: colors.brickRed }]}>Illustration</Text>
+            <Image source={{ uri: story.artworkUrl }} style={styles.storyArtwork} resizeMode="cover" />
+          </Card>
+        ) : null}
+
         <View style={[styles.readTabs, { borderColor: colors.border, backgroundColor: colors.ivoryWarm }]}>
+
           <Pressable
             onPress={() => setReadTab('english')}
             style={[styles.readTabBtn, readTab === 'english' && [styles.readTabBtnActive, { backgroundColor: colors.surface }]]}
@@ -555,6 +616,18 @@ const styles = StyleSheet.create({
   },
   readTabLabelActive: {
     color: SagaColors.brickRed,
+  },
+
+  storyArtworkCard: {
+    marginBottom: Spacing.md,
+    paddingVertical: Spacing.lg,
+    borderWidth: 1,
+    borderRadius: Spacing.cardRadius,
+  },
+  storyArtwork: {
+    width: '100%',
+    height: 220,
+    borderRadius: Spacing.cardRadius,
   },
 
   // Read Blocks

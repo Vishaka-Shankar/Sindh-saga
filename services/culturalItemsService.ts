@@ -14,7 +14,7 @@ import {
 import {
     fetchCollectionDocuments,
     fetchDocumentById
-} from './firebaseService';
+} from '../firebase';
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 
