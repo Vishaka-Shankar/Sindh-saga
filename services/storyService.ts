@@ -132,3 +132,49 @@ export function subscribeToUserStories(
     (err) => onError?.(err),
   );
 }
+
+export async function approveStory(storyId: string): Promise<void> {
+  const db = getFirestoreDb();
+  if (!db) throw new Error('Firestore is not available.');
+
+  await updateDoc(doc(db, COLLECTIONS.stories, storyId), {
+    moderationStatus: 'approved',
+    publishedAt: new Date().toISOString(),
+  });
+}
+
+export async function rejectStory(storyId: string): Promise<void> {
+  const db = getFirestoreDb();
+  if (!db) throw new Error('Firestore is not available.');
+
+  await updateDoc(doc(db, COLLECTIONS.stories, storyId), {
+    moderationStatus: 'rejected',
+  });
+}
+
+export function subscribeToPendingReviewStories(
+  userId: string,
+  onChange: (stories: Story[]) => void,
+  onError?: (error: Error) => void,
+): Unsubscribe {
+  const db = getFirestoreDb();
+  if (!db) {
+    onChange([]);
+    return () => {};
+  }
+
+  const q = query(
+    collection(db, COLLECTIONS.stories),
+    where('userId', '==', userId),
+    where('moderationStatus', '==', 'pending_review'),
+    orderBy('createdAt', 'desc'),
+  );
+
+  return onSnapshot(
+    q,
+    (snap) => {
+      onChange(snap.docs.map((d) => mapStoryDoc(d.id, d.data())));
+    },
+    (err) => onError?.(err),
+  );
+}
