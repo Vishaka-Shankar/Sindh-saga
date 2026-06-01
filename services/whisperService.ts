@@ -2,7 +2,11 @@
  * whisperService.ts
  *
  * Sends a Firebase audio URL to OpenAI Whisper for Sindhi transcription,
- * then saves the resulting transcript back to the Firestore recording document.
+ * scrubs PII for COPPA 2025 compliance, then saves the resulting transcript
+ * back to the Firestore recording document.
+ *
+ * COPPA 2025 Compliance: All transcripts are automatically scrubbed of PII
+ * before storage. Original unscrubbed transcripts are never persisted.
  *
  * Modular — no UI imports, no side effects beyond Firestore writes.
  *
@@ -10,7 +14,11 @@
  *   EXPO_PUBLIC_OPENAI_API_KEY=sk-...
  */
 
+import { doc, updateDoc } from 'firebase/firestore';
+
+import { getFirestoreDb } from '@/firebase/firestore';
 import { saveTranscriptModeration, type ModerationStatus } from '@/services/moderationService';
+import { hasPII, scrubPII } from '@/services/piiScrubService';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -24,6 +32,7 @@ export interface TranscriptResult {
   moderationNotes?: string[];
   piiEntities?: string[];
   unsafeCategories?: string[];
+  piiDetected?: boolean; // COPPA 2025: Whether PII was detected before scrubbing
 }
 
 export type TranscriptStatus =
@@ -121,12 +130,18 @@ export async function transcribeAudio(
 
   const data = await whisperResponse.json();
 
+  // ── COPPA 2025 Compliance: Scrub PII from transcript immediately ─────────
+  const originalTranscript = data.text ?? '';
+  const piiDetected = hasPII(originalTranscript);
+  const scrubbedTranscript = scrubPII(originalTranscript);
+
   onProgress?.('done', 'Transcription complete');
 
   return {
-    transcript: data.text ?? '',
+    transcript: scrubbedTranscript, // Use scrubbed transcript everywhere
     language: data.language ?? 'sd',
     durationSeconds: data.duration ?? null,
+    piiDetected, // Log whether PII was detected (original transcript never stored)
   };
 }
 
@@ -136,6 +151,8 @@ export async function transcribeAudio(
 
 /**
  * Saves the transcript and moderation metadata back to Firestore.
+ *
+ * COPPA 2025 Compliance: Adds privacy processing metadata to document.
  *
  * @param firestoreDocId  The Firestore document ID under the 'stories' collection
  * @param result          The TranscriptResult returned by transcribeAudio()
@@ -147,12 +164,29 @@ export async function saveTranscriptToFirestore(
   onProgress?: TranscriptProgressCallback,
 ) {
   onProgress?.('saving', 'Saving transcript to Firestore...');
+
   const moderationResult = await saveTranscriptModeration(
     firestoreDocId,
     result.transcript,
     result.language,
     result.durationSeconds,
   );
+
+  // Add COPPA 2025 compliance metadata to document
+  const db = getFirestoreDb();
+  if (db) {
+    try {
+      await updateDoc(doc(db, 'stories', firestoreDocId), {
+        privacyProcessed: true,
+        privacyProcessedAt: new Date().toISOString(),
+        piiDetected: result.piiDetected ?? false,
+      });
+    } catch (error) {
+      console.error('Failed to add privacy metadata:', error);
+      // Don't fail the save if privacy metadata update fails
+    }
+  }
+
   onProgress?.('done', 'Transcript saved successfully');
   return moderationResult;
 }
